@@ -1,5 +1,9 @@
 # Finscope
 
+<p align="center">
+  <img src="https://github.com/Dlmily/finscope/blob/main/finscope_intraday_mark.png" alt="项目封面" width="500">
+</p>
+
 此应用工程面向 **Android**。当前版本采用设备本地模式：用户自行导入的 Finnhub API Key 会保存在系统安全存储中；自选、虚拟账户、持仓、交易流水和资产快照保存在当前设备的本地存储中。应用不要求登录，不提供跨设备同步，也不托管用户 API Key。
 
 ## 用途
