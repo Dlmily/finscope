@@ -57,3 +57,7 @@ npm run start
 ## 关于版本号
 
 版本号格式为：[大更新].[小更新].[修复更新]
+
+## 未来计划
+
+- 适配iOS、HarmonyOS、Linux。
