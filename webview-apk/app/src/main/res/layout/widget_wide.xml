@@ -1,0 +1,13 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="horizontal" android:gravity="center_vertical" android:background="@drawable/widget_background">
+  <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.05" android:orientation="vertical">
+    <TextView android:id="@+id/widget_symbol" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#F5F7FB" android:textStyle="bold" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/widget_price" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#F5F7FB" android:textStyle="bold" android:textSize="18sp" android:layout_marginTop="4dp" />
+    <TextView android:id="@+id/widget_pnl" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="11sp" android:layout_marginTop="2dp" />
+    <TextView android:id="@+id/widget_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#8B91A2" android:textSize="9sp" android:layout_marginTop="3dp" android:maxLines="1" android:ellipsize="end" />
+  </LinearLayout>
+  <ImageView android:id="@+id/widget_chart" android:layout_width="0dp" android:layout_height="72dp" android:layout_weight="1.2" android:layout_marginLeft="8dp" android:scaleType="fitXY" />
+  <LinearLayout android:layout_width="58dp" android:layout_height="match_parent" android:orientation="vertical" android:layout_marginLeft="8dp">
+    <TextView android:id="@+id/widget_buy" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center" android:text="买入" android:textColor="#060609" android:textStyle="bold" android:textSize="11sp" android:background="@drawable/widget_buy_background" />
+    <TextView android:id="@+id/widget_sell" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="7dp" android:gravity="center" android:text="卖出" android:textColor="#FF4E71" android:textStyle="bold" android:textSize="11sp" android:background="@drawable/widget_sell_background" />
+  </LinearLayout>
+</LinearLayout>

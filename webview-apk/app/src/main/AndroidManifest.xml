@@ -1,0 +1,30 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <application
+    android:allowBackup="false"
+    android:label="Finscope 测试版"
+    android:icon="@drawable/finscope_intraday_mark"
+    android:roundIcon="@drawable/finscope_intraday_mark"
+    android:theme="@style/AppTheme"
+    android:usesCleartextTraffic="false">
+    <receiver android:name=".FinscopeSquareWidgetProvider" android:exported="false">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        <action android:name="space.manus.finscopewebviewtest.WIDGET_ORDER" />
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/finscope_square_widget" />
+    </receiver>
+    <receiver android:name=".FinscopeWideWidgetProvider" android:exported="false">
+      <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/finscope_wide_widget" />
+    </receiver>
+    <activity
+      android:name=".MainActivity"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Finscope 模拟交易终端",
+    "slug": "finscope-paper-trader",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": { "backgroundColor": "#060609" },
+    "ios": { "supportsTablet": true, "bundleIdentifier": "space.manus.finscopepapertrader" },
+    "android": {
+      "adaptiveIcon": { "backgroundColor": "#060609", "foregroundImage": "./assets/android-icon-foreground.png", "backgroundImage": "./assets/android-icon-background.png", "monochromeImage": "./assets/android-icon-monochrome.png" },
+      "predictiveBackGestureEnabled": false,
+      "package": "space.manus.finscopepapertrader"
+    },
+    "plugins": ["expo-secure-store"],
+    "web": { "favicon": "./assets/favicon.png" }
+  }
+}

@@ -1,0 +1,16 @@
+plugins {
+  id "com.android.application"
+}
+
+android {
+  namespace "space.manus.finscopewebviewtest"
+  compileSdk 36
+
+  defaultConfig {
+    applicationId "space.manus.finscopewebviewtest"
+    minSdk 24
+    targetSdk 36
+    versionCode 34
+    versionName "1.8.4-portfolio-widgets-test"
+  }
+}
