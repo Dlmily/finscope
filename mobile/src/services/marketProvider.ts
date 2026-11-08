@@ -177,11 +177,25 @@ type TencentMinutePayload = { data?: Record<string, { data?: { date?: string; da
 export function parseTencentMinutePayload(payload: TencentMinutePayload, providerSymbol: string): MarketIntradayPoint[] {
   const minuteData = payload.data?.[providerSymbol]?.data;
   const tradeDate = minuteData?.date ?? "";
-  return (minuteData?.data ?? []).map((line) => {
+  const points = (minuteData?.data ?? []).map((line) => {
     const [label, rawPrice, rawVolume, rawAmount] = line.split(/\s+/);
     const price = toNumber(rawPrice);
     return { label, price, volume: toNumber(rawVolume), amount: toNumber(rawAmount), timestamp: timestampFromTencentMinute(tradeDate, label) };
-  }).filter((point) => Number.isFinite(point.price) && point.price > 0 && /^\d{4}$/.test(point.label));
+  }).filter((point) => Number.isFinite(point.price) && point.price > 0 && Number.isFinite(point.timestamp) && /^\d{4}$/.test(point.label))
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .filter((point, index, all) => index === 0 || point.timestamp !== all[index - 1].timestamp);
+
+  // Tencent returns cumulative volume/amount and repeats the final quote for
+  // every minute after the last trade. Those rows are not observations and
+  // render as a misleading long horizontal tail in the intraday chart.
+  while (points.length > 1) {
+    const last = points[points.length - 1];
+    const previous = points[points.length - 2];
+    const unchanged = last.price === previous.price && last.volume === previous.volume && last.amount === previous.amount;
+    if (!unchanged || !Number.isFinite(last.volume) || !Number.isFinite(last.amount)) break;
+    points.pop();
+  }
+  return points;
 }
 
 async function tushareRequest(apiName: string, credential: string, params: Record<string, string> = {}, fields = "") {

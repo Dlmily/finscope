@@ -1,0 +1,62 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag, for example v1.8.5"
+        required: true
+        default: "v1.8.5"
+      release_name:
+        description: "Release title"
+        required: true
+        default: "Finscope v1.8.5"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Stage WebView assets
+        run: bash webview-apk/scripts/stage-web-assets.sh
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Build debug APK
+        run: gradle -p webview-apk :app:assembleDebug --no-daemon --max-workers=1
+
+      - name: Rename APK
+        run: cp webview-apk/app/build/outputs/apk/debug/app-debug.apk "Finscope-${{ inputs.release_tag }}-debug.apk"
+
+      - name: Create GitHub Release and upload APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ inputs.release_tag }}" "Finscope-${{ inputs.release_tag }}-debug.apk" \
+            --title "${{ inputs.release_name }}" \
+            --generate-notes

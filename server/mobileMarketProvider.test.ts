@@ -119,6 +119,26 @@ describe("Tencent public no-signup market provider", () => {
     expect(fetchMock).toHaveBeenCalledWith("https://ifzq.gtimg.cn/appstock/app/minute/query?code=sh600519");
   });
 
+  it("removes repeated no-trade rows from the end of Tencent intraday data", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: {
+        sh600519: {
+          data: { date: "20260826", data: [
+            "1528 1300.42 1102 143172830.07",
+            "1529 1300.42 1102 143172830.07",
+            "1530 1300.42 1102 143172830.07",
+          ] },
+        },
+      },
+    })));
+    global.fetch = fetchMock as typeof fetch;
+
+    const points = await getDeviceMarketProvider("TENCENT").getIntraday?.("600519.SH", "");
+
+    expect(points).toHaveLength(1);
+    expect(points?.[0]).toMatchObject({ label: "1528", price: 1300.42, volume: 1102, amount: 143172830.07 });
+  });
+
   it("finds curated public-market equities by both stock code and company name", async () => {
     const provider = getDeviceMarketProvider("TENCENT");
     await expect(provider.searchSymbols("600519", "")).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ symbol: "600519.SH", description: "贵州茅台", assetType: "EQUITY" })]));
