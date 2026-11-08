@@ -3,6 +3,7 @@ package space.manus.finscopewebviewtest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,6 +29,16 @@ public class MainActivity extends Activity {
     @JavascriptInterface
     public void setChartCursorLocked(boolean locked) {
       chartCursorLocked = locked;
+    }
+
+    @JavascriptInterface
+    public void openExternalUrl(String url) {
+      try {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(intent);
+      } catch (RuntimeException ignored) {
+        // The JavaScript fallback will show a user-facing error when no browser is available.
+      }
     }
   }
 

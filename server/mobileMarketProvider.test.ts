@@ -139,6 +139,24 @@ describe("Tencent public no-signup market provider", () => {
     expect(points?.[0]).toMatchObject({ label: "1528", price: 1300.42, volume: 1102, amount: 143172830.07 });
   });
 
+  it("removes a long flat-price tail even when Tencent cumulative volume increments", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { sh600519: { data: { date: "20260826", data: [
+        "1526 1300.00 1000 100000.00",
+        "1527 1300.42 1100 110000.00",
+        "1528 1300.42 1101 110100.00",
+        "1529 1300.42 1102 110200.00",
+        "1530 1300.42 1103 110300.00",
+      ] } } },
+    })));
+    global.fetch = fetchMock as typeof fetch;
+
+    const points = await getDeviceMarketProvider("TENCENT").getIntraday?.("600519.SH", "");
+
+    expect(points).toHaveLength(1);
+    expect(points?.[0]).toMatchObject({ label: "1526", price: 1300, volume: 1000 });
+  });
+
   it("finds curated public-market equities by both stock code and company name", async () => {
     const provider = getDeviceMarketProvider("TENCENT");
     await expect(provider.searchSymbols("600519", "")).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ symbol: "600519.SH", description: "贵州茅台", assetType: "EQUITY" })]));

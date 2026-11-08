@@ -32,6 +32,10 @@ if [[ -n "$ICON_FONT_SOURCE" ]]; then
   rm -rf "$EXPORT_DIR/assets/node_modules"
 fi
 
+# Expo emits bundled images as root-relative URLs. A file:// WebView has no
+# web-server root, so make every bundled asset URL document-relative.
+find "$EXPORT_DIR/_expo/static/js/web" -type f -name '*.js' -exec sed -i -E 's#"/assets/#"./assets/#g' {} +
+
 rm -rf "$ASSETS_DIR"
 mkdir -p "$ASSETS_DIR"
 cp -a "$EXPORT_DIR/." "$ASSETS_DIR/"

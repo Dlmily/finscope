@@ -195,6 +195,17 @@ export function parseTencentMinutePayload(payload: TencentMinutePayload, provide
     if (!unchanged || !Number.isFinite(last.volume) || !Number.isFinite(last.amount)) break;
     points.pop();
   }
+  // After the last meaningful price move, Tencent may continue emitting many
+  // minutes at the same displayed price while its cumulative volume slowly
+  // changes. Keeping that run produces the misleading long ruler-like line
+  // seen after the final trade. Keep short genuine flat periods, but remove a
+  // stale tail once the price has been unchanged for four or more samples.
+  if (points.length >= 5) {
+    const lastPrice = points[points.length - 1].price;
+    let runStart = points.length - 1;
+    while (runStart > 0 && points[runStart - 1].price === lastPrice) runStart -= 1;
+    if (points.length - runStart >= 4) points.splice(runStart === 0 ? 1 : runStart);
+  }
   return points;
 }
 

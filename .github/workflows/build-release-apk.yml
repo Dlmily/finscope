@@ -53,10 +53,15 @@ jobs:
       - name: Rename APK
         run: cp webview-apk/app/build/outputs/apk/debug/app-debug.apk "Finscope-${{ inputs.release_tag }}-debug.apk"
 
-      - name: Create GitHub Release and upload APK
+      - name: Overwrite GitHub Release APK
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ inputs.release_tag }}" "Finscope-${{ inputs.release_tag }}-debug.apk" \
-            --title "${{ inputs.release_name }}" \
-            --generate-notes
+          if gh release view "${{ inputs.release_tag }}" >/dev/null 2>&1; then
+            gh release edit "${{ inputs.release_tag }}" --title "${{ inputs.release_name }}"
+            gh release upload "${{ inputs.release_tag }}" "Finscope-${{ inputs.release_tag }}-debug.apk" --clobber
+          else
+            gh release create "${{ inputs.release_tag }}" "Finscope-${{ inputs.release_tag }}-debug.apk" \
+              --title "${{ inputs.release_name }}" \
+              --generate-notes
+          fi

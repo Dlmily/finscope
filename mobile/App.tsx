@@ -42,6 +42,15 @@ type Tab = "watchlist" | "market" | "news" | "research" | "trade" | "settings" |
 type Side = "BUY" | "SELL";
 type SponsorMethod = "wechat" | "alipay";
 
+function openExternalUrl(url: string) {
+  try {
+    const bridge = typeof window !== "undefined" ? (window as Window & { FinscopeNativeBridge?: { openExternalUrl?: (value: string) => void } }).FinscopeNativeBridge : undefined;
+    if (bridge?.openExternalUrl) { bridge.openExternalUrl(url); return; }
+  } catch { /* fall through to the platform linker */ }
+  if (Platform.OS === "web" && typeof window !== "undefined") { window.open(url, "_blank", "noopener,noreferrer"); return; }
+  void Linking.openURL(url).catch(() => Alert.alert("无法打开链接", "请检查网络后重试，或复制链接在浏览器中打开。"));
+}
+
 type PaperPosition = { symbol: string; quantity: number; averageCost: number; lastPrice?: number; lastPriceTimestamp?: number; displayName?: string; currency?: MarketCurrency; market?: MarketScope; sourceId?: MarketSourceId; buyLocks?: { quantity: number; unlockAt: number }[] };
 type PaperTrade = { id: string; side: Side; symbol: string; quantity: number; price: number; realizedPnl: number; executedAt: number; displayName?: string; currency?: MarketCurrency; market?: MarketScope; sourceId?: MarketSourceId };
 type AccountSnapshot = { totalAssets: number; capturedAt: number };
@@ -379,7 +388,7 @@ function AboutScreen({ onOpenSettings, onCheckUpdates, onOpenSponsor }: { onOpen
     <SectionTitle code="03 / DEVELOPER" title="开发者" action="DLMILY" />
     <View style={styles.compatPanel}><Text style={styles.compatTitle}>{ABOUT_DEVELOPER}</Text><Text style={styles.compatCopy}>独立开发与维护。当前版本为测试用途的本地模拟交易终端。</Text></View>
     <SectionTitle code="04 / PROJECT" title="开源项目" action={`v${APP_VERSION}`} />
-    <View style={styles.compatPanel}><Text style={styles.compatTitle}>FINSCOPE SOURCE</Text><Text style={styles.compatCopy}>项目源码公开托管，欢迎查看、学习、提交 Issue 或参与改进。应用采用 MPL 2.0 开源协议，具体权利与义务请以仓库中的 LICENSE 为准。</Text><Pressable onPress={() => void Linking.openURL("https://github.com/Dlmily/finscope").catch(() => Alert.alert("无法打开链接", "请检查网络后重试。"))} style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}><MaterialCommunityIcons name="github" size={17} color={C.cyan} /><Text style={styles.linkButtonText}>打开 GitHub 开源项目</Text></Pressable></View>
+    <View style={styles.compatPanel}><Text style={styles.compatTitle}>FINSCOPE SOURCE</Text><Text style={styles.compatCopy}>项目源码公开托管，欢迎查看、学习、提交 Issue 或参与改进。应用采用 MPL 2.0 开源协议，具体权利与义务请以仓库中的 LICENSE 为准。</Text><Pressable onPress={() => openExternalUrl("https://github.com/Dlmily/finscope")} style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}><MaterialCommunityIcons name="github" size={17} color={C.cyan} /><Text style={styles.linkButtonText}>打开 GitHub 开源项目</Text></Pressable></View>
     <SectionTitle code="05 / SPONSOR" title="支持项目" action="WECHAT / ALIPAY" />
     <View style={styles.compatPanel}><Text style={styles.compatTitle}>让项目继续维护</Text><Text style={styles.compatCopy}>如果 Finscope 对你有帮助，欢迎通过微信或支付宝支持后续开发、测试设备和数据服务成本。每一份支持都会用于改进功能与修复问题，谢谢。</Text><View style={styles.sponsorButtons}><Pressable onPress={() => onOpenSponsor("wechat")} style={({ pressed }) => [styles.sponsorButton, styles.wechatButton, pressed && styles.pressed]}><MaterialCommunityIcons name="wechat" size={18} color={C.ink} /><Text style={styles.sponsorButtonText}>微信支持</Text></Pressable><Pressable onPress={() => onOpenSponsor("alipay")} style={({ pressed }) => [styles.sponsorButton, styles.alipayButton, pressed && styles.pressed]}><MaterialCommunityIcons name="wallet-outline" size={18} color={C.ink} /><Text style={styles.sponsorButtonText}>支付宝支持</Text></Pressable></View></View>
     <SectionTitle code="06 / UPDATE" title="检查更新" action={`CURRENT v${APP_VERSION}`} />
@@ -665,11 +674,11 @@ export default function App() {
       if (!result.hasUpdate) {
         Alert.alert("已经是最新版本", `当前版本 v${APP_VERSION}，检查源：${result.source}。`);
       } else {
-        const action = result.downloadUrl ? { text: "下载 APK", onPress: () => void Linking.openURL(result.downloadUrl!).catch(() => Alert.alert("无法打开下载地址", "请稍后重试，或打开 Release 页面手动下载。")) } : undefined;
+        const action = result.downloadUrl ? { text: "下载 APK", onPress: () => openExternalUrl(result.downloadUrl!) } : undefined;
         Alert.alert(`发现新版本 v${result.latestVersion}`, `当前版本 v${APP_VERSION}\n检查源：${result.source}\n\n${result.releaseNotes?.slice(0, 260) ?? "新版本已发布。"}`, action ? [{ text: "稍后", style: "cancel" }, action] : [{ text: "知道了" }]);
       }
     } catch (error) {
-      Alert.alert("检查更新失败", error instanceof Error ? error.message : "请检查网络后重试。");
+      Alert.alert("自动检查暂不可用", `${error instanceof Error ? error.message : "网络请求未完成。"}\n\n可以直接打开 Release 页面查看最新 APK。`, [{ text: "取消", style: "cancel" }, { text: "打开 Release", onPress: () => openExternalUrl("https://github.com/Dlmily/finscope/releases") }]);
     } finally {
       setCheckingUpdates(false);
     }

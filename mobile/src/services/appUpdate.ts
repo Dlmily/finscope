@@ -1,5 +1,5 @@
 export const APP_VERSION = "1.0.1";
-export const APP_VERSION_CODE = 35;
+export const APP_VERSION_CODE = 36;
 
 type ReleaseSource = "GitHub" | "国内加速源";
 export type UpdateCheckResult = {
