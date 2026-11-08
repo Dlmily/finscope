@@ -6,7 +6,7 @@
 
 | 项目 | 当前内测包 |
 | --- | --- |
-| 版本 | `1.6.6-native-touch-bridge-test`（`versionCode 16`） |
+| 版本 | `1.0.1`（`versionCode 35`） |
 | 包名 | `space.manus.finscopewebviewtest` |
 | 最低 Android 版本 | Android 7.0（API 24） |
 | 签名 | Android Debug，限内测侧载 |
@@ -43,6 +43,6 @@ bash scripts/stage-web-assets.sh
 
 ## 安装与复测
 
-该 APK 可覆盖同包名且同为调试签名的较早 `versionCode 5` 至 `versionCode 15` 测试包。可以将 APK 传到设备后用文件管理器打开，并仅向该安装来源授予“安装未知应用”权限；也可以在启用 USB 调试后执行 `adb install -r app/build/outputs/apk/debug/app-debug.apk`。若设备中的同包名 APK 使用不同签名，需先卸载旧包。
+该 APK 可覆盖同包名且同为调试签名的较早的同签名测试包。可以将 APK 传到设备后用文件管理器打开，并仅向该安装来源授予“安装未知应用”权限；也可以在启用 USB 调试后执行 `adb install -r app/build/outputs/apk/debug/app-debug.apk`。若设备中的同包名 APK 使用不同签名，需先卸载旧包。
 
 安装后请确认启动窗口始终保持深色、首次风险确认可见、默认自选可以载入公开延时行情；选择贵州茅台等已有分钟响应的标的后，检查分时图的价格区间与页面报价一致且默认显示当日最新一端。再切换日 K、周 K、月 K，确认横向可滚动周期默认展示最新交易数据。最后可在设置页检查完整风险提示，并在交易页验证本地账户操作不涉及真实订单。

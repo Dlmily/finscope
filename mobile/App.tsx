@@ -12,6 +12,7 @@ import { createTradeModal, paperOrderPreflight, prepareStockDetailAction, resolv
 import { paginateTradeHistory } from "./src/services/tradeHistoryPagination";
 import { DEFAULT_MARKET_RULES_ENABLED, MARKET_TRADING_RULES_STORAGE_KEY, marketRuleSummary, marketSellRuleError, sellableQuantity } from "./src/services/marketTradingRules";
 import { buildWidgetPortfolioSnapshot } from "./src/services/widgetPortfolioSnapshot";
+import { APP_VERSION, checkForUpdate, type UpdateCheckResult } from "./src/services/appUpdate";
 import { QuoteDetailHeader } from "./src/components/QuoteDetailHeader";
 import { domesticStyles } from "./src/styles/domesticMarket";
 import { KlineChart } from "./src/components/KlineChart";
@@ -21,6 +22,7 @@ import {
   Animated,
   Alert,
   Easing,
+  Image,
   Linking,
   Modal,
   Platform,
@@ -38,6 +40,7 @@ import Svg, { Line, Path, Polyline } from "react-native-svg";
 
 type Tab = "watchlist" | "market" | "news" | "research" | "trade" | "settings" | "about";
 type Side = "BUY" | "SELL";
+type SponsorMethod = "wechat" | "alipay";
 
 type PaperPosition = { symbol: string; quantity: number; averageCost: number; lastPrice?: number; lastPriceTimestamp?: number; displayName?: string; currency?: MarketCurrency; market?: MarketScope; sourceId?: MarketSourceId; buyLocks?: { quantity: number; unlockAt: number }[] };
 type PaperTrade = { id: string; side: Side; symbol: string; quantity: number; price: number; realizedPnl: number; executedAt: number; displayName?: string; currency?: MarketCurrency; market?: MarketScope; sourceId?: MarketSourceId };
@@ -364,7 +367,7 @@ export function TradeScreen({ account, quotes, selected, onOrder, onReset, refre
 
 function Metric({ label, value, color }: { label: string; value: string; color?: string }) { return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={[styles.metricValue, color ? { color } : undefined]}>{value}</Text></View>; }
 
-function AboutScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
+function AboutScreen({ onOpenSettings, onCheckUpdates, onOpenSponsor }: { onOpenSettings: () => void; onCheckUpdates: () => void; onOpenSponsor: (method: SponsorMethod) => void }) {
   return <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
     <View style={styles.heroLine}><Text style={styles.terminalPath}>[ ABOUT / FIN•SCOPE ]</Text><Tag>LOCAL TERMINAL</Tag></View>
     <View style={styles.researchTarget}><Text style={styles.sectionCode}>FIN•SCOPE</Text><Text style={styles.researchSymbol}>模拟交易终端</Text><Text style={styles.researchPrice}>市场观察 · 学习研究 · 本地模拟账户</Text></View>
@@ -375,7 +378,13 @@ function AboutScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
     <View style={styles.disabledProvider}><MaterialCommunityIcons name="database-lock-outline" size={18} color={C.cyan} /><Text style={styles.disabledProviderText}>自选、账户、持仓、交易流水与个人数据源凭证保存在当前设备或 WebView 本地存储中。清除应用数据、重置账户或卸载应用可能导致本地数据不可恢复。</Text></View>
     <SectionTitle code="03 / DEVELOPER" title="开发者" action="DLMILY" />
     <View style={styles.compatPanel}><Text style={styles.compatTitle}>{ABOUT_DEVELOPER}</Text><Text style={styles.compatCopy}>独立开发与维护。当前版本为测试用途的本地模拟交易终端。</Text></View>
-    <SectionTitle code="04 / TERMS" title="用户条款" action="IN-APP NOTICE" />
+    <SectionTitle code="04 / PROJECT" title="开源项目" action={`v${APP_VERSION}`} />
+    <View style={styles.compatPanel}><Text style={styles.compatTitle}>FINSCOPE SOURCE</Text><Text style={styles.compatCopy}>项目源码公开托管，欢迎查看、学习、提交 Issue 或参与改进。应用采用 MPL 2.0 开源协议，具体权利与义务请以仓库中的 LICENSE 为准。</Text><Pressable onPress={() => void Linking.openURL("https://github.com/Dlmily/finscope").catch(() => Alert.alert("无法打开链接", "请检查网络后重试。"))} style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}><MaterialCommunityIcons name="github" size={17} color={C.cyan} /><Text style={styles.linkButtonText}>打开 GitHub 开源项目</Text></Pressable></View>
+    <SectionTitle code="05 / SPONSOR" title="支持项目" action="WECHAT / ALIPAY" />
+    <View style={styles.compatPanel}><Text style={styles.compatTitle}>让项目继续维护</Text><Text style={styles.compatCopy}>如果 Finscope 对你有帮助，欢迎通过微信或支付宝支持后续开发、测试设备和数据服务成本。每一份支持都会用于改进功能与修复问题，谢谢。</Text><View style={styles.sponsorButtons}><Pressable onPress={() => onOpenSponsor("wechat")} style={({ pressed }) => [styles.sponsorButton, styles.wechatButton, pressed && styles.pressed]}><MaterialCommunityIcons name="wechat" size={18} color={C.ink} /><Text style={styles.sponsorButtonText}>微信支持</Text></Pressable><Pressable onPress={() => onOpenSponsor("alipay")} style={({ pressed }) => [styles.sponsorButton, styles.alipayButton, pressed && styles.pressed]}><MaterialCommunityIcons name="wallet-outline" size={18} color={C.ink} /><Text style={styles.sponsorButtonText}>支付宝支持</Text></Pressable></View></View>
+    <SectionTitle code="06 / UPDATE" title="检查更新" action={`CURRENT v${APP_VERSION}`} />
+    <View style={styles.compatPanel}><Text style={styles.compatTitle}>双源更新检查</Text><Text style={styles.compatCopy}>将优先尝试 GitHub Release；网络受限时会自动尝试国内加速源。发现新版后可直接打开 APK 下载地址。</Text><Pressable onPress={onCheckUpdates} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}><MaterialCommunityIcons name="update" size={18} color={C.ink} /><Text style={styles.primaryButtonText}>检查新版本</Text></Pressable></View>
+    <SectionTitle code="07 / TERMS" title="用户条款" action="IN-APP NOTICE" />
     <View style={styles.answerPanel}><Text style={styles.answerText}>{ABOUT_TERMS}</Text><Text style={styles.answerSource}>本页面是应用内使用说明，不能替代针对具体业务、地区或监管要求的法律意见。</Text></View>
     <Pressable onPress={onOpenSettings} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}><MaterialCommunityIcons name="tune-variant" size={18} color={C.ink} /><Text style={styles.primaryButtonText}>打开数据源与账户设置</Text></Pressable>
   </ScrollView>;
@@ -436,6 +445,8 @@ export default function App() {
   const [storageReady, setStorageReady] = useState(false);
   const [showFirstLaunchRisk, setShowFirstLaunchRisk] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [sponsorMethod, setSponsorMethod] = useState<SponsorMethod | null>(null);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [marketRulesEnabled, setMarketRulesEnabled] = useState(DEFAULT_MARKET_RULES_ENABLED);
   const [widgetOrderQuantity, setWidgetOrderQuantity] = useState(1);
   const [widgetOrderSignal, setWidgetOrderSignal] = useState(0);
@@ -646,13 +657,30 @@ export default function App() {
   }, [paperOrder, storageReady, widgetOrderQuantity, widgetOrderSignal]);
   const requestResetAccount = () => setShowResetConfirm(true);
   const confirmResetAccount = () => { setAccount({ initialCash: STARTING_CASH, cash: STARTING_CASH, positions: [], trades: [], snapshots: [{ totalAssets: STARTING_CASH, capturedAt: Date.now() }] }); setShowResetConfirm(false); };
+  const checkUpdates = async () => {
+    if (checkingUpdates) return;
+    setCheckingUpdates(true);
+    try {
+      const result: UpdateCheckResult = await checkForUpdate();
+      if (!result.hasUpdate) {
+        Alert.alert("已经是最新版本", `当前版本 v${APP_VERSION}，检查源：${result.source}。`);
+      } else {
+        const action = result.downloadUrl ? { text: "下载 APK", onPress: () => void Linking.openURL(result.downloadUrl!).catch(() => Alert.alert("无法打开下载地址", "请稍后重试，或打开 Release 页面手动下载。")) } : undefined;
+        Alert.alert(`发现新版本 v${result.latestVersion}`, `当前版本 v${APP_VERSION}\n检查源：${result.source}\n\n${result.releaseNotes?.slice(0, 260) ?? "新版本已发布。"}`, action ? [{ text: "稍后", style: "cancel" }, action] : [{ text: "知道了" }]);
+      }
+    } catch (error) {
+      Alert.alert("检查更新失败", error instanceof Error ? error.message : "请检查网络后重试。");
+    } finally {
+      setCheckingUpdates(false);
+    }
+  };
   const confirmFirstLaunchRisk = async () => { await AsyncStorage.setItem(FIRST_LAUNCH_RISK_KEY, "confirmed"); setShowFirstLaunchRisk(false); };
   const selectMarketSource = (source: MarketSourceId) => { if (source === marketSource) return; marketSourceVersion.current += 1; quoteRequestVersion.current += 1; detailRequestVersion.current += 1; setSourceHydrated(false); setApiKey(""); setMarketSource(source); navigateTo("settings"); };
   const navItems = [["watchlist", "star-four-points-outline", "自选"], ["market", "chart-timeline-variant", "行情"], ["news", "newspaper-variant-outline", "资讯"], ["research", "flask-outline", "研究"], ["trade", "swap-horizontal-bold", "交易"], ["settings", "cog-outline", "设置"]] as [Tab, keyof typeof MaterialCommunityIcons.glyphMap, string][];
-  const content = <>{activeTab === "watchlist" && <WatchlistScreen quotes={quotes} candles={candles} intraday={intraday} chartError={chartError} selected={selected} onSelect={selectQuote} onOpenResearch={() => navigateTo("research")} onRefresh={() => refreshQuotes()} onRemoveSelected={removeSelectedFromWatchlist} refreshing={refreshing} detailsLoading={detailsLoading} hasKey={hasProviderAccess} provider={provider} />}{activeTab === "market" && <MarketScreen quotes={quotes} results={searchResults} onSelect={selectQuote} onOpenDetails={openStockDetails} onAddToWatchlist={(symbol) => openStockDetails(symbol, true)} hasKey={hasProviderAccess} onSearch={searchSymbol} provider={provider} searching={searching} searchError={searchError} />}{activeTab === "news" && <NewsScreen selected={selected} research={companyResearch} onOpenResearch={openResearchFromNews} />}{activeTab === "research" && <ResearchScreen selected={selected} research={companyResearch} loading={researchLoading} error={researchError} seedQuestion={researchSeedQuestion} hasKey={hasProviderAccess} />}{activeTab === "trade" && <TradeScreen account={account} quotes={quotes} selected={selected} onOrder={paperOrder} onReset={requestResetAccount} refreshing={refreshing} onRefresh={() => refreshQuotes()} refreshStatus={portfolioQuoteRefreshStatus} lastSuccessfulRefreshAt={lastSuccessfulPortfolioQuoteRefreshAt} onOpenPositionDetails={openStockDetails} onResolvePositionQuote={resolvePositionQuote} marketRulesEnabled={marketRulesEnabled} currentMarketSource={marketSource} />}{activeTab === "settings" && <SettingsScreen marketSource={marketSource} provider={provider} hasKey={hasProviderAccess} keyMask={apiKey ? `••••${apiKey.slice(-4)}` : ""} onSaveKey={saveKey} onClearKey={clearKey} onSelectSource={selectMarketSource} onResetAccount={requestResetAccount} marketRulesEnabled={marketRulesEnabled} onToggleMarketRules={setMarketRulesEnabled} widgetOrderQuantity={widgetOrderQuantity} onWidgetOrderQuantityChange={setWidgetOrderQuantity} />}{activeTab === "about" && <AboutScreen onOpenSettings={() => navigateTo("settings")} />}</>;
+  const content = <>{activeTab === "watchlist" && <WatchlistScreen quotes={quotes} candles={candles} intraday={intraday} chartError={chartError} selected={selected} onSelect={selectQuote} onOpenResearch={() => navigateTo("research")} onRefresh={() => refreshQuotes()} onRemoveSelected={removeSelectedFromWatchlist} refreshing={refreshing} detailsLoading={detailsLoading} hasKey={hasProviderAccess} provider={provider} />}{activeTab === "market" && <MarketScreen quotes={quotes} results={searchResults} onSelect={selectQuote} onOpenDetails={openStockDetails} onAddToWatchlist={(symbol) => openStockDetails(symbol, true)} hasKey={hasProviderAccess} onSearch={searchSymbol} provider={provider} searching={searching} searchError={searchError} />}{activeTab === "news" && <NewsScreen selected={selected} research={companyResearch} onOpenResearch={openResearchFromNews} />}{activeTab === "research" && <ResearchScreen selected={selected} research={companyResearch} loading={researchLoading} error={researchError} seedQuestion={researchSeedQuestion} hasKey={hasProviderAccess} />}{activeTab === "trade" && <TradeScreen account={account} quotes={quotes} selected={selected} onOrder={paperOrder} onReset={requestResetAccount} refreshing={refreshing} onRefresh={() => refreshQuotes()} refreshStatus={portfolioQuoteRefreshStatus} lastSuccessfulRefreshAt={lastSuccessfulPortfolioQuoteRefreshAt} onOpenPositionDetails={openStockDetails} onResolvePositionQuote={resolvePositionQuote} marketRulesEnabled={marketRulesEnabled} currentMarketSource={marketSource} />}{activeTab === "settings" && <SettingsScreen marketSource={marketSource} provider={provider} hasKey={hasProviderAccess} keyMask={apiKey ? `••••${apiKey.slice(-4)}` : ""} onSaveKey={saveKey} onClearKey={clearKey} onSelectSource={selectMarketSource} onResetAccount={requestResetAccount} marketRulesEnabled={marketRulesEnabled} onToggleMarketRules={setMarketRulesEnabled} widgetOrderQuantity={widgetOrderQuantity} onWidgetOrderQuantityChange={setWidgetOrderQuantity} />}{activeTab === "about" && <AboutScreen onOpenSettings={() => navigateTo("settings")} onCheckUpdates={() => void checkUpdates()} onOpenSponsor={setSponsorMethod} />}</>;
 		const navigation = (wide = false) => navItems.map(([tab, icon, label]) => <Pressable key={tab} testID={`navigation-${tab}`} onPress={() => navigateTo(tab)} style={({ pressed }) => [wide ? layoutStyles.wideTab : styles.tab, activeTab === tab && (wide ? layoutStyles.wideTabActive : undefined), pressed && styles.pressed]}><MaterialCommunityIcons name={icon} size={wide ? 24 : 22} color={activeTab === tab ? C.cyan : C.muted} /><Text style={[wide ? layoutStyles.wideTabLabel : styles.tabLabel, activeTab === tab && { color: C.cyan }]}>{label}</Text></Pressable>);
   // @ts-ignore 历史单行 StyleSheet 在模块初始化后注册重置确认专用样式。
-  return <SafeAreaView style={styles.safe}><ScanBackground />{!storageReady ? <View style={styles.bootLayer}><GlitchMark /><Text style={styles.bootTitle}>FIN•SCOPE</Text><Text style={styles.bootCopy}>INITIALIZING LOCAL TERMINAL</Text><ActivityIndicator color={C.cyan} size="small" /></View> : null}<Animated.View style={[styles.appFade, { opacity: launchOpacity }]}><StatusBar style="light" /><Header activeTab={activeTab} onPressAbout={() => navigateTo("about")} /><View style={isWideLayout ? layoutStyles.wideFrame : styles.main}>{isWideLayout ? <View style={layoutStyles.sideRail}><Text style={layoutStyles.railCode}>MODULES</Text>{navigation(true)}<View style={layoutStyles.railFooter}><Text style={layoutStyles.railFooterText}>IOS / ANDROID</Text><Text style={layoutStyles.railFooterText}>HARMONY PATH</Text></View></View> : null}<Animated.View style={[isWideLayout ? layoutStyles.wideContent : styles.main, { opacity: pageOpacity, transform: [{ translateY: pageTranslateY }] }]}>{content}</Animated.View></View>{!isWideLayout ? <View style={styles.tabBar}>{navigation()}</View> : null}</Animated.View><Modal transparent visible={storageReady && showFirstLaunchRisk} animationType="fade" onRequestClose={() => undefined}><View style={styles.modalBackdrop}><View style={styles.firstLaunchCard}><Text style={styles.modalCode}>LOCAL ACCOUNT // NOTICE</Text><Text style={styles.modalTitle}>交易提示</Text><Text style={styles.firstLaunchText}>虚拟资金，非真实交易。任何买卖仅影响本设备的模拟账户，不会向券商、交易所或第三方下单。</Text><Pressable onPress={confirmFirstLaunchRisk} style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}><Text style={styles.confirmText}>我已知悉</Text></Pressable></View></View></Modal><Modal transparent visible={showResetConfirm} animationType="fade" onRequestClose={() => setShowResetConfirm(false)}><View style={styles.modalBackdrop}><View style={styles.modalCard}><Text style={styles.modalCode}>LOCAL ACCOUNT // RESET</Text><Text style={styles.modalTitle}>重置账户</Text><Text style={styles.modalWarning}>将清除本设备的账户余额、持仓、交易记录和资产快照，并恢复初始资金。此操作无法撤销。</Text><View style={styles.modalActions}><Pressable onPress={() => setShowResetConfirm(false)} style={styles.cancelButton}><Text style={styles.cancelText}>取消</Text></Pressable><Pressable onPress={confirmResetAccount} style={styles.dangerConfirmButton}><Text style={styles.dangerConfirmText}>确认重置</Text></Pressable></View></View></View></Modal></SafeAreaView>;
+  return <SafeAreaView style={styles.safe}><ScanBackground />{!storageReady ? <View style={styles.bootLayer}><GlitchMark /><Text style={styles.bootTitle}>FIN•SCOPE</Text><Text style={styles.bootCopy}>INITIALIZING LOCAL TERMINAL</Text><ActivityIndicator color={C.cyan} size="small" /></View> : null}<Animated.View style={[styles.appFade, { opacity: launchOpacity }]}><StatusBar style="light" /><Header activeTab={activeTab} onPressAbout={() => navigateTo("about")} /><View style={isWideLayout ? layoutStyles.wideFrame : styles.main}>{isWideLayout ? <View style={layoutStyles.sideRail}><Text style={layoutStyles.railCode}>MODULES</Text>{navigation(true)}<View style={layoutStyles.railFooter}><Text style={layoutStyles.railFooterText}>IOS / ANDROID</Text><Text style={layoutStyles.railFooterText}>HARMONY PATH</Text></View></View> : null}<Animated.View style={[isWideLayout ? layoutStyles.wideContent : styles.main, { opacity: pageOpacity, transform: [{ translateY: pageTranslateY }] }]}>{content}</Animated.View></View>{!isWideLayout ? <View style={styles.tabBar}>{navigation()}</View> : null}</Animated.View><Modal transparent visible={storageReady && showFirstLaunchRisk} animationType="fade" onRequestClose={() => undefined}><View style={styles.modalBackdrop}><View style={styles.firstLaunchCard}><Text style={styles.modalCode}>LOCAL ACCOUNT // NOTICE</Text><Text style={styles.modalTitle}>交易提示</Text><Text style={styles.firstLaunchText}>虚拟资金，非真实交易。任何买卖仅影响本设备的模拟账户，不会向券商、交易所或第三方下单。</Text><Pressable onPress={confirmFirstLaunchRisk} style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}><Text style={styles.confirmText}>我已知悉</Text></Pressable></View></View></Modal><Modal transparent visible={showResetConfirm} animationType="fade" onRequestClose={() => setShowResetConfirm(false)}><View style={styles.modalBackdrop}><View style={styles.modalCard}><Text style={styles.modalCode}>LOCAL ACCOUNT // RESET</Text><Text style={styles.modalTitle}>重置账户</Text><Text style={styles.modalWarning}>将清除本设备的账户余额、持仓、交易记录和资产快照，并恢复初始资金。此操作无法撤销。</Text><View style={styles.modalActions}><Pressable onPress={() => setShowResetConfirm(false)} style={styles.cancelButton}><Text style={styles.cancelText}>取消</Text></Pressable><Pressable onPress={confirmResetAccount} style={styles.dangerConfirmButton}><Text style={styles.dangerConfirmText}>确认重置</Text></Pressable></View></View></View></Modal><Modal transparent visible={sponsorMethod !== null} animationType="fade" onRequestClose={() => setSponsorMethod(null)}><View style={styles.modalBackdrop}><View style={styles.sponsorModalCard}><Text style={styles.modalCode}>SPONSOR // {sponsorMethod === "wechat" ? "WECHAT" : "ALIPAY"}</Text><Text style={styles.modalTitle}>{sponsorMethod === "wechat" ? "微信支持项目" : "支付宝支持项目"}</Text><Text style={styles.sponsorModalCopy}>感谢你的支持。扫码完成后即可关闭此窗口，资金将用于后续开发、测试与维护。</Text><Image source={sponsorMethod === "wechat" ? require("./assets/sponsor-wechat.png") : require("./assets/sponsor-alipay.jpg")} style={styles.sponsorQr} resizeMode="contain" /><Pressable onPress={() => setSponsorMethod(null)} style={styles.confirmButton}><Text style={styles.confirmText}>关闭</Text></Pressable></View></View></Modal></SafeAreaView>;
 }
 
 const orderFeedbackStyles = StyleSheet.create({
@@ -697,6 +725,16 @@ Object.assign(styles as Record<string, unknown>, {
   chartLoading: { minHeight: 230, borderWidth: 1, borderColor: C.line, backgroundColor: C.panel, justifyContent: "center", alignItems: "center", gap: 9, padding: 20 },
   chartLoadingTitle: { color: C.white, fontSize: 13, fontWeight: "800" },
   chartLoadingCopy: { color: C.muted, fontSize: 10, lineHeight: 16, textAlign: "center" },
+  linkButton: { minHeight: 44, borderWidth: 1, borderColor: C.cyan + "99", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 12 },
+  linkButtonText: { color: C.cyan, fontSize: 12, fontWeight: "800" },
+  sponsorButtons: { flexDirection: "row", gap: 10, marginTop: 4 },
+  sponsorButton: { flex: 1, minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
+  wechatButton: { backgroundColor: "#07C160" },
+  alipayButton: { backgroundColor: "#1677FF" },
+  sponsorButtonText: { color: C.ink, fontSize: 12, fontWeight: "900" },
+  sponsorModalCard: { backgroundColor: C.panel2, borderTopWidth: 2, borderTopColor: C.cyan, padding: 22, gap: 13, alignItems: "stretch" },
+  sponsorModalCopy: { color: C.muted, fontSize: 12, lineHeight: 18 },
+  sponsorQr: { width: "100%", height: 330, backgroundColor: C.white, alignSelf: "center" },
   appFade: { flex: 1 },
   bootLayer: { ...StyleSheet.absoluteFill, zIndex: 30, backgroundColor: C.ink, justifyContent: "center", alignItems: "center", gap: 12 },
   bootTitle: { color: C.white, fontWeight: "900", fontSize: 22, letterSpacing: 2.4 },

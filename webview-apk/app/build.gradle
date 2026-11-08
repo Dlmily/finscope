@@ -10,7 +10,7 @@ android {
     applicationId "space.manus.finscopewebviewtest"
     minSdk 24
     targetSdk 36
-    versionCode 34
-    versionName "1.8.4-portfolio-widgets-test"
+    versionCode 35
+    versionName "1.0.1"
   }
 }
