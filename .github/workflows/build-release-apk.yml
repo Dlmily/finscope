@@ -37,7 +37,7 @@ jobs:
 
       - name: Install mobile dependencies
         working-directory: mobile
-        run: npm ci --legacy-peer-deps --no-audit --no-fund
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Stage WebView assets
         run: bash webview-apk/scripts/stage-web-assets.sh
