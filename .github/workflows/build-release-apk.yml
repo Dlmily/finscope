@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Release tag, for example v1.0.1"
+        description: "Release tag, for example v1.0.1-text"
         required: true
-        default: "v1.0.1"
+        default: "v1.0.1-text"
       release_name:
         description: "Release title"
         required: true
-        default: "Finscope v1.0.1"
+        default: "Finscope v1.0.1-text"
 
 permissions:
   contents: write

@@ -1,4 +1,4 @@
-export const APP_VERSION = "1.0.1";
+export const APP_VERSION = "1.0.1-text";
 export const APP_VERSION_CODE = 36;
 
 type ReleaseSource = "GitHub" | "国内加速源";

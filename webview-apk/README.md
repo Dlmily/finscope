@@ -6,7 +6,7 @@
 
 | 项目 | 当前内测包 |
 | --- | --- |
-| 版本 | `1.0.1`（`versionCode 35`） |
+| 版本 | `1.0.1-text`（`versionCode 36`） |
 | 包名 | `space.manus.finscopewebviewtest` |
 | 最低 Android 版本 | Android 7.0（API 24） |
 | 签名 | Android Debug，限内测侧载 |
